@@ -1,0 +1,8 @@
+X Add elements
+X Use client-events library with React
+  Rearrange elements by dragging
+  Remove elements
+  Focus on child element (super large flex-grow to animate with css!)
+  edit element title
+  edit element importance
+  edit element content

@@ -1,0 +1,19 @@
+body,
+#root,
+.App
+{
+  position : absolute;
+  margin : 0;
+  width : 100%;
+  height : 100%;
+}
+
+/* to prevent native dragging...*/
+body *
+{
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
