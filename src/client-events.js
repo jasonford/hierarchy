@@ -186,6 +186,7 @@ window.addEventListener("load", function () {
     var startY = startEvent.touches[0].pageY;
     //  last 5 velocities recorded in x direction
     var vx = [0,0,0,0,0];
+    var vy = [0,0,0,0,0];
     var lastT = new Date();
     var lastD = 0;
     var firstD = 0;
@@ -259,6 +260,9 @@ window.addEventListener("load", function () {
       vx.shift();
       vx.push(dx / (t - lastT));
 
+      vy.shift();
+      vy.push(dy / (t - lastT));
+
       lastX = x;
       lastY = y;
       lastT = t;
@@ -271,18 +275,27 @@ window.addEventListener("load", function () {
     });
 
     once(window, 'touchend', function (endEvent) {
-      var swiped;
+      var swiped = '';
       vx.sort();
+      vy.sort();
       var medianVx = vx[2];
+      var medianVy = vy[2];
+
+      if (medianVy < -0.5) {
+        swiped += 'up';
+      }
+      else if (medianVy > 0.5) {
+        swiped += 'down';
+      }
       if (medianVx > 0.5) {
-        swiped = 'right';
+        swiped += 'right';
         var swiperightEvent = customEvent('swiperight', {
           vx : medianVx
         });
         endEvent.target.dispatchEvent(swiperightEvent);
       }
       else if (medianVx < -0.5) {
-        swiped = 'left';
+        swiped += 'left';
         var swipeleftEvent = customEvent('swipeleft', {
           vx : medianVx
         });
@@ -302,8 +315,9 @@ window.addEventListener("load", function () {
     var startTarget = startEvent.target;
     var startX = startEvent.pageX;
     var startY = startEvent.pageY;
-    //  last 5 velocities recorded in x direction
+    //  last 5 velocities recorded in x,y directions
     var vx = [0,0,0,0,0];
+    var vy = [0,0,0,0,0];
     var lastT = new Date();
 
     var lastX = startX;
@@ -335,6 +349,9 @@ window.addEventListener("load", function () {
       vx.shift();
       vx.push(dx / (t - lastT));
 
+      vy.shift();
+      vy.push(dy / (t - lastT));
+
       lastX = x;
       lastY = y;
       lastT = t;
@@ -350,17 +367,27 @@ window.addEventListener("load", function () {
 
       dragging = false;
       vx.sort();
+      vy.sort();
+      
       var medianVx = vx[2];
-      var swiped;
+      var medianVy = vy[2];
+
+      var swiped = '';
+      if (medianVy < -0.5) {
+        swiped += 'up';
+      }
+      else if (medianVy > 0.5) {
+        swiped += 'down';
+      }
       if (medianVx > 0.5) {
-        swiped = 'right';
+        swiped += 'right';
         var swiperightEvent = customEvent('swiperight', {
           vx : medianVx
         });
         startTarget.dispatchEvent(swiperightEvent);
       }
       else if (medianVx < -0.5) {
-        swiped = 'left';
+        swiped += 'left';
         var swipeleftEvent = customEvent('swipeleft', {
           vx : medianVx
         });

@@ -1,9 +1,7 @@
 import React from 'react';
 import firebase from 'firebase';
 import ReactFireMixin from 'reactfire';
-import $ from 'jquery';
-
-import FillText from './FillText.js';
+import ImportanceChartElement from './ImportanceChartElement';
 
 import './ImportanceChart.css';
 
@@ -11,7 +9,7 @@ import './ImportanceChart.css';
 function calculateRowImportance(row) {
   let importance = 0;
   row.forEach((element) => {
-    importance += element.importance;
+    importance += parseFloat(element.importance);
   });
   return importance;
 }
@@ -19,7 +17,7 @@ function calculateRowImportance(row) {
 //  create a square 2d matrix[row][column]
 function getRowsAndColumns(data) {
   data = data || [];
-  let elementsPerRow = Math.ceil(Math.pow(data.length, 0.5)+1);
+  let elementsPerRow = Math.ceil(Math.pow(data.length, 0.5));
   let numRows = Math.ceil(data.length/elementsPerRow);
   let rows = [];
   for (let r=0; r<numRows; r++) {
@@ -32,82 +30,13 @@ function getRowsAndColumns(data) {
     }
     rows.push(row);
   }
+  if (rows.length && rows[rows.length-1].length < elementsPerRow/2) {
+    //  remove the last row and add it to the second to last
+    let lastRow = rows.pop();
+    rows[rows.length-1] = rows[rows.length-1].concat(lastRow);
+  }
   return rows;
 }
-
-function withinBoundingBox(event, bbox) {
-  return event.x > bbox.left && event.x < bbox.right && event.y > bbox.top && event.y < bbox.bottom;
-}
-
-function onRightSide(event, bbox) {
-  return event.x > bbox.left + bbox.width/2;
-}
-
-let ImportanceChartElement = React.createClass({
-  mixins : [ReactFireMixin],
-  componentWillMount() {
-    let ref = firebase.database().ref(this.props.elementKey);
-    this.bindAsObject(ref, "element");
-  },
-  componentDidMount: function () {
-    let that = this;
-    let rootNode = this.refs.root;
-    rootNode.addEventListener("onedrag", (e)=>{
-      rootNode.userSelect = 'none';
-      rootNode.style.boxShadow = '2px 2px 8px rgba(0,0,0,0.2)';
-      rootNode.style.zIndex = 10;
-      rootNode.style.transform = 'translate('+e.tx+'px, '+e.ty+'px)';
-    });
-    rootNode.addEventListener("drop", (e)=>{
-      rootNode.userSelect = null;
-      rootNode.style.boxShadow = null;
-      rootNode.style.zIndex = null;
-      rootNode.style.transform = null;
-      let moved = false;
-      setTimeout(function () {
-        $(rootNode).parent().parent().find('.importance-chart-element').each(function (index,el) {
-          if (moved || rootNode === el) return;
-          let bbox = el.getBoundingClientRect();
-          if (withinBoundingBox(e, bbox)) {
-            if (onRightSide(e, bbox)) {
-              index += 1;
-            }
-            that.props.moveElement(that.state.element, index);
-            moved = true;
-          }
-        });
-      });
-    });
-  },
-  render() {
-    let that = this;
-    let importanceChart;
-    if (this.state.elements) {
-      importanceChart = <ImportanceChart elementKey={this.props.elementKey} />;
-    }
-    let overlay = [];
-    let style = {
-      flexGrow : this.state.element.importance
-    };
-    if (that.state.active) {
-      overlay = <div className="importance-chart-element-overlay">
-        <FillText
-          text={this.state.element.title}
-          key={this.state.element.title}/>
-      </div>;
-    }
-    return (<div
-      ref="root"
-      className="importance-chart-element"
-      key={this.props.elementKey}
-      style={style}>
-      {importanceChart}
-      {overlay}
-      {this.props.elementKey}<br/>
-      {this.state.element.index}
-    </div>);
-  }
-});
 
 
 let ImportanceChart = React.createClass({
@@ -147,7 +76,7 @@ let ImportanceChart = React.createClass({
       return obj;
     });
     elements.sort(function (a,b) {
-      return a.index >= b.index;
+      return a.index - b.index;
     });
 
     //  assign new index
@@ -169,6 +98,12 @@ let ImportanceChart = React.createClass({
   },
   render() {
     let that = this;
+    function focus(elementKey) {
+      that.setState({focused : elementKey});
+    }
+    function focused(elementKey) {
+      return that.state.focused == elementKey;
+    }
     let els = [];
     if (this.state && this.state.element.elements) {
       els = this.state.element.elements;
@@ -178,21 +113,27 @@ let ImportanceChart = React.createClass({
       return that.state.element.elements[key];
     });
     elements.sort(function (a,b) {
-      return a.index >= b.index;
+      return a.index - b.index;
     });
     let rowData = getRowsAndColumns(elements);
     let rows = [];
     rowData.forEach((columnData) => {
       let columns = [];
       let rowImportance = calculateRowImportance(columnData);
+      let focusedRow = false;
       columnData.forEach((elementData) => {
+        if (that.state.focused === elementData.key) {
+          focusedRow = true;
+        }
         columns.push(<ImportanceChartElement
           elementKey={that.props.elementKey+'/elements/'+elementData.key}
           key={elementData.key}
-          moveElement={that.moveElement}/>);
+          moveElement={that.moveElement}
+          focus={focus}
+          focused={focused}/>);
       });
       let rowStyle = {
-        flexGrow : rowImportance
+        flexGrow : focusedRow? 1000 :rowImportance
       };
       rows.push(
         <div

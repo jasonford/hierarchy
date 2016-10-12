@@ -53,6 +53,13 @@
   background : #AAAAAA;
 }
 
+
+.importance-chart-element,
+.importance-chart-row
+{
+  transition: flex-grow 0.3s;
+}
+
 .importance-chart-options
 {
   position : absolute;
@@ -62,4 +69,12 @@
   height : 32px;
   background : rgba(0,0,0,0.1);
   box-shadow : 0 0 2px rgba(0,0,0,0.1);
+}
+
+.dragging
+{
+  box-shadow : 2px 2px 8px rgba(0,0,0,0.2);
+  z-index : 10;
+  opacity : 0.8;
+  cursor : grabbing;
 }
