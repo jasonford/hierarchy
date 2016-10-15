@@ -102,7 +102,7 @@ let ImportanceChart = React.createClass({
       that.setState({focused : elementKey});
     }
     function focused(elementKey) {
-      return that.state.focused == elementKey;
+      return that.state.focused === elementKey;
     }
     let els = [];
     if (this.state && this.state.element.elements) {
@@ -131,6 +131,7 @@ let ImportanceChart = React.createClass({
           moveElement={that.moveElement}
           focus={focus}
           focused={focused}/>);
+        columns.push(<br/>)
       });
       let rowStyle = {
         flexGrow : focusedRow? 1000 :rowImportance

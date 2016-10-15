@@ -24,10 +24,16 @@ let ImportanceChartElementEditor = React.createClass({
       <input
         value={this.state.element.title}
         onChange={this.update('title')}/>
-      <input
+      <select
         type="number"
         value={this.state.element.importance}
-        onChange={this.update('importance', parseFloat)}/>
+        onChange={this.update('importance', parseFloat)}>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+      </select>
     </div>
   }
 });

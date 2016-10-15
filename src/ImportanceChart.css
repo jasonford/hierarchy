@@ -27,6 +27,7 @@
 
 .importance-chart-element {
   display: flex;
+  flex-basis: 0; /*force to respect importance ratios*/
   position : relative;
   flex-direction: column;
   justify-content: space-between;
@@ -49,8 +50,13 @@
 
 .importance-chart-element
 {
+}
+
+.importance-chart-element-inner
+{
   border : 2px solid #BBBBBB;
   background : #AAAAAA;
+  height : 100%;
 }
 
 
@@ -77,4 +83,13 @@
   z-index : 10;
   opacity : 0.8;
   cursor : grabbing;
+}
+
+.dropping
+{
+  box-shadow : 2px 2px 8px rgba(0,0,0,0.2);
+  z-index : 10;
+  opacity : 0.8;
+  transition: transform 0.3s;
+  transform : translate(0px,0px);
 }
