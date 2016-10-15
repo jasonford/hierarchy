@@ -3,9 +3,11 @@
   width : 100%;
   height : 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: space-between;
   background : #BBBBBB;
+  overflow : hidden;
 }
 
 /*  don't show importance chart overlays after first level*/
@@ -48,22 +50,25 @@
   right : 0;
 }
 
-.importance-chart-element
+.importance-chart-row-divider
 {
+  width : 100%;
+  height : 0;
+  flex-grow : 0;
 }
 
 .importance-chart-element-inner
 {
-  border : 2px solid #BBBBBB;
   background : #AAAAAA;
-  height : 100%;
+  border : 1px solid rgba(0,0,0,0.1);
+  width : calc(100% - 2px);
+  height : calc(100% - 2px);
 }
 
 
-.importance-chart-element,
-.importance-chart-row
+.importance-chart-element
 {
-  transition: flex-grow 0.3s;
+  transition: height 0.3s, flex-grow 0.3s;
 }
 
 .importance-chart-options
@@ -90,6 +95,6 @@
   box-shadow : 2px 2px 8px rgba(0,0,0,0.2);
   z-index : 10;
   opacity : 0.8;
-  transition: transform 0.3s;
+  transition: transform 0.3s, flex-grow 0.3s;
   transform : translate(0px,0px);
 }

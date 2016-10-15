@@ -6,38 +6,27 @@ import ImportanceChartElement from './ImportanceChartElement';
 import './ImportanceChart.css';
 
 //  calculate the total importance of a row
-function calculateRowImportance(row) {
-  let importance = 0;
-  row.forEach((element) => {
-    importance += parseFloat(element.importance);
+function calculateRowImportance(elements, elementsPerRow, index) {
+  let start = index - index%elementsPerRow;
+  let end = Math.min(elements.length, start + elementsPerRow);
+  let rowImportance = 0;
+  for (var i=start; i<end; i++) {
+    rowImportance += elements[i].importance;
+  }
+  return rowImportance;
+}
+
+function calculateTotalImportance(elements) {
+  let total = 0;
+  elements.forEach((element)=>{
+    total += element.importance;
   });
-  return importance;
+  return total;
 }
 
-//  create a square 2d matrix[row][column]
-function getRowsAndColumns(data) {
-  data = data || [];
-  let elementsPerRow = Math.ceil(Math.pow(data.length, 0.5));
-  let numRows = Math.ceil(data.length/elementsPerRow);
-  let rows = [];
-  for (let r=0; r<numRows; r++) {
-    let row = [];
-    for (let c=0; c<elementsPerRow; c++) {
-      let cell = data[r*elementsPerRow + c];
-      if (cell) {
-        row.push(cell);
-      }
-    }
-    rows.push(row);
-  }
-  if (rows.length && rows[rows.length-1].length < elementsPerRow/2) {
-    //  remove the last row and add it to the second to last
-    let lastRow = rows.pop();
-    rows[rows.length-1] = rows[rows.length-1].concat(lastRow);
-  }
-  return rows;
+function calculateElementsPerRow(data) {
+  return Math.ceil(Math.pow(data.length, 0.5));
 }
-
 
 let ImportanceChart = React.createClass({
   mixins : [ReactFireMixin],
@@ -64,7 +53,7 @@ let ImportanceChart = React.createClass({
     this.firebaseRefs.element.child('elements').push({
       title : Date.now(),
       index : index,
-      importance : Math.random() + 1,
+      importance : 1,
       elements : []
     });
   },
@@ -104,6 +93,27 @@ let ImportanceChart = React.createClass({
     function focused(elementKey) {
       return that.state.focused === elementKey;
     }
+    function inFocusedRow(elements, elementsPerRow, index) {
+      let start = index - index%elementsPerRow;
+      let end = Math.min(elements.length, start + elementsPerRow);
+      let isIn = false
+      for (var i=start; i<end; i++) {
+        if (that.state.focused == elements[i].key) {
+          isIn = true;
+          break;
+        }
+      }
+      return isIn;
+    }
+    function calculateFocusedRowImportance(elements, elementsPerRow, index) {
+      let importance = 0;
+      elements.forEach((element, index)=>{
+        if (inFocusedRow(elements, elementsPerRow, index)) {
+          importance += element.importance;
+        }
+      });
+      return importance;
+    }
     let els = [];
     if (this.state && this.state.element.elements) {
       els = this.state.element.elements;
@@ -115,39 +125,38 @@ let ImportanceChart = React.createClass({
     elements.sort(function (a,b) {
       return a.index - b.index;
     });
-    let rowData = getRowsAndColumns(elements);
-    let rows = [];
-    rowData.forEach((columnData) => {
-      let columns = [];
-      let rowImportance = calculateRowImportance(columnData);
-      let focusedRow = false;
-      columnData.forEach((elementData) => {
-        if (that.state.focused === elementData.key) {
-          focusedRow = true;
+    let elementsPerRow = calculateElementsPerRow(elements);
+    let elementDOM = [];
+    let totalImportance = calculateTotalImportance(elements);
+    elements.forEach((elementData, index) => {
+      function height() {
+        //  if focused, give focused row height presidence
+        let h = calculateRowImportance(elements, elementsPerRow, index)/totalImportance;
+        if (that.state.focused) {
+          if (inFocusedRow(elements, elementsPerRow, index)) {
+            h = 0.95;
+          }
+          else {
+            h = 0.05 * calculateRowImportance(elements, elementsPerRow, index)/(totalImportance-calculateFocusedRowImportance(elements, elementsPerRow, index));
+          }
         }
-        columns.push(<ImportanceChartElement
-          elementKey={that.props.elementKey+'/elements/'+elementData.key}
-          key={elementData.key}
-          moveElement={that.moveElement}
-          focus={focus}
-          focused={focused}/>);
-        columns.push(<br/>)
-      });
-      let rowStyle = {
-        flexGrow : focusedRow? 1000 :rowImportance
-      };
-      rows.push(
-        <div
-          className="importance-chart-row"
-          style={rowStyle}
-          key={rows.length}>
-          {columns}
-        </div>
-      );
+        return (100*h) + "%";
+      }
+      elementDOM.push(<ImportanceChartElement
+            elementKey={that.props.elementKey+'/elements/'+elementData.key}
+            key={elementData.key}
+            moveElement={that.moveElement}
+            focus={focus}
+            focused={focused}
+            height={height}/>);
+      if ((index+1)%(elementsPerRow)===0) {
+        elementDOM.push(<div className="importance-chart-row-divider" key={index}></div>);
+      }
     });
+
     return (
       <div className="importance-chart">
-        {rows}
+        {elementDOM}
         <div ref="adderRemover" className="importance-chart-options"></div>
       </div>
     );

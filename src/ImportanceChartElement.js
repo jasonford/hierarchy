@@ -92,6 +92,7 @@ let ImportanceChartElement = React.createClass({
     let overlay = [];
     let style = {
       flexGrow : this.props.focused(key)? 100 : this.state.element.importance,
+      height : this.props.height()
     };
     if (that.state.active) {
       overlay = <div className="importance-chart-element-overlay">
